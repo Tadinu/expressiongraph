@@ -1,7 +1,7 @@
 #ifndef EXPRESSIONGRAPH_TEST_HPP
 #define EXPRESSIONGRAPH_TEST_HPP
 
-#include <kdl/expressiontree.hpp>
+#include "kdl/expressiontree.hpp"
 #include <gtest/gtest.h>
 
 namespace KDL {

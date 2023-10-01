@@ -1,52 +1,82 @@
-# USE THE CATKIN CMAKELISTS FOR BUILDING WITH CATKIN
-# ELSE PROCEED WITH ROSBUILD BELOW
-if(NOT USE_ROSBUILD)
-  include(catkin.cmake)
-  return()
-endif()
-
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
-
-# Set the build type.  Options are:
-#  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
-#  Debug          : w/ debug symbols, w/o optimization
-#  Release        : w/o debug symbols, w/ optimization
-#  RelWithDebInfo : w/ debug symbols, w/ optimization
-#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-#set(ROS_BUILD_TYPE RelWithDebInfo)
-set(ROS_BUILD_TYPE Release)
-#set(ROS_BUILD_TYPE Debug)
-rosbuild_init()
+cmake_minimum_required(VERSION 3.5)
+project(expressiongraph)
 
 #set the default path for built executables to the "bin" directory
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-#uncomment if you have defined messages
-#rosbuild_genmsg()
-#uncomment if you have defined services
-#rosbuild_gensrv()
-#SET(ENABLE_EXAMPLES ON CACHE BOOL "enable compilation of a series of examples") 
 OPTION(ENABLE_EXAMPLES "enable compilation of a series of examples" ON) 
-INCLUDE(${PROJECT_SOURCE_DIR}/examples/CMakeLists.txt)
 
-FILE( GLOB EXPRESSIONTREE_SRCS src/[^.]*.cpp src/[^.]*.cxx)
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
 
+endif()
 
+# Default to C++17
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 
-#common commands for building c++ executables and libraries
-rosbuild_add_library(${PROJECT_NAME} ${EXPRESSIONTREE_SRCS})
-#target_link_libraries(${PROJECT_NAME} another_library)
-#rosbuild_add_boost_directories()
-#rosbuild_link_boost(${PROJECT_NAME} thread)
-#rosbuild_add_executable(example examples/example.cpp)
-#target_link_libraries(example ${PROJECT_NAME})
+find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 
-rosbuild_add_gtest( expressiongraph_test ./tests/expressiongraph_test.cpp )
-target_link_libraries(expressiongraph_test ${PROJECT_NAME} orocos-kdl)
+find_package(Eigen3 REQUIRED)
+find_package(orocos_kdl REQUIRED)
+include_directories(include ${eigen_INCLUDE_DIRS} ${orocos_kdl_INCLUDE_DIRS})
 
+if(ENABLE_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
+set(EXPRESSIONTREE_SRCS
+  src/expressiontree_chain.cpp
+  src/expressiontree_double.cpp
+  src/expressiontree_expressions.cpp
+  src/expressiontree_frame.cpp
+  src/expressiontree_mimo.cpp
+  src/expressiontree_motionprofiles.cpp
+  #src/expressiontree_motprof.cpp.bak
+  src/expressiontree_rotation.cpp
+  src/expressiontree_twist.cpp
+  src/expressiontree_vector.cpp
+  src/expressiontree_wrench.cpp
+  src/mptrap.cpp
+)
+
+add_library(${PROJECT_NAME} ${EXPRESSIONTREE_SRCS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${orocos_kdl_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${orocos_kdl_LIBRARIES})
+
+#############
+## Testing ##
+#############
+
+if (BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(${PROJECT_NAME}-test tests/expressiongraph_test.cpp)
+  target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+endif()
+
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+# Export dependencies, include for downstream/client CMake-based packages
+ament_export_dependencies()
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
+ament_package()
  

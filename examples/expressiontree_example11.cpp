@@ -21,7 +21,7 @@
 * limitations under the Licence.
 */
 
-#include <kdl/expressiontree.hpp>
+#include "kdl/expressiontree.hpp"
 
 /*
  * Example that demonstrates the evaluation of a simple expression in doubles for

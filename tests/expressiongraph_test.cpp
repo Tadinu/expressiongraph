@@ -6,7 +6,7 @@
  */
 
 
-#include <kdl/expressiontree.hpp>
+#include "kdl/expressiontree.hpp"
 #include "expressiongraph_test.hpp"
 
 
